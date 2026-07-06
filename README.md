@@ -70,8 +70,8 @@ at the top of `build_star_schema.py`), then re-run step 2 only.
 
 ```bash
 pip install pandas numpy faker
-python 01_generate_source_data.py     # writes data/source_branch_A.csv, source_branch_B.csv
-python 02_build_star_schema.py        # writes output/*.csv (the star schema)
+python generate_source_data.py     # writes data/source_branch_A.csv, source_branch_B.csv
+python build_star_schema.py        # writes output/*.csv (the star schema)
 ```
 
 Then in **Power BI Desktop**:
