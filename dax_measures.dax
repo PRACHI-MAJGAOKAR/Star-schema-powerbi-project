@@ -1,0 +1,130 @@
+// =================================================================
+// DAX MEASURES — paste into a dedicated measure table in Power BI
+// called "_Measures" (best practice: don't scatter measures across
+// fact/dim tables — create one blank table for them).
+//
+// Assumes relationships:
+//   FactTransactions[DateKey]     -> DimDate[DateKey]        (many-to-1)
+//   FactTransactions[CustomerKey] -> DimCustomer[CustomerKey] (many-to-1)
+//   FactTransactions[MerchantKey] -> DimMerchant[MerchantKey] (many-to-1)
+//   DimDate marked as the official "Date Table" (Table tools > Mark as date table)
+// =================================================================
+
+// -----------------------------------------------------------------
+// 1. Basic aggregations (foundation measures other measures build on)
+// -----------------------------------------------------------------
+Total Amount =
+SUM ( FactTransactions[Amount] )
+
+Transaction Count =
+COUNTROWS ( FactTransactions )
+
+Distinct Customers =
+DISTINCTCOUNT ( FactTransactions[CustomerKey] )
+
+Avg Transaction Value =
+DIVIDE ( [Total Amount], [Transaction Count], 0 )
+
+// -----------------------------------------------------------------
+// 2. YoY Growth % — requires DimDate marked as a proper date table
+// -----------------------------------------------------------------
+Total Amount PY =
+CALCULATE (
+    [Total Amount],
+    SAMEPERIODLASTYEAR ( DimDate[Date] )
+)
+
+YoY Growth % =
+VAR CurrentAmt = [Total Amount]
+VAR PriorAmt = [Total Amount PY]
+RETURN
+    DIVIDE ( CurrentAmt - PriorAmt, PriorAmt, BLANK () )
+
+// -----------------------------------------------------------------
+// 3. Rolling 3-month average — classic time-intelligence pattern
+// -----------------------------------------------------------------
+Rolling 3M Avg Amount =
+AVERAGEX (
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -3, MONTH ),
+    CALCULATE ( [Total Amount] )
+)
+
+// -----------------------------------------------------------------
+// 4. Fraud rate — ratio measure over a boolean column
+// -----------------------------------------------------------------
+Fraud Rate % =
+VAR FraudTxns =
+    CALCULATE ( [Transaction Count], FactTransactions[IsFraud] = TRUE () )
+RETURN
+    DIVIDE ( FraudTxns, [Transaction Count], 0 )
+
+// -----------------------------------------------------------------
+// 5. RFM SEGMENTATION — Recency, Frequency, Monetary
+// This is the "8-10 non-trivial measures" showpiece. Build it as
+// three component measures + one segment label measure.
+// -----------------------------------------------------------------
+
+// Recency: days since the customer's most recent transaction,
+// relative to the max date in the whole dataset (proxy for "today")
+Recency Days =
+VAR LastTxnDate =
+    CALCULATE ( MAX ( FactTransactions[TransactionDateTime] ) )
+VAR DatasetMaxDate =
+    CALCULATE ( MAX ( FactTransactions[TransactionDateTime] ), ALL ( FactTransactions ) )
+RETURN
+    DATEDIFF ( LastTxnDate, DatasetMaxDate, DAY )
+
+// Frequency: number of transactions for the customer in context
+Frequency Count =
+[Transaction Count]
+
+// Monetary: total spend for the customer in context
+Monetary Value =
+[Total Amount]
+
+// RFM Segment: buckets customers using quintile-style thresholds.
+// NOTE: for a production version, compute quintile breakpoints
+// dynamically with PERCENTILEX.INC — this simplified version uses
+// fixed business thresholds, which is usually what stakeholders
+// actually want (easier to explain than dynamic quintiles).
+RFM Segment =
+VAR R = [Recency Days]
+VAR F = [Frequency Count]
+VAR M = [Monetary Value]
+RETURN
+    SWITCH (
+        TRUE (),
+        R <= 30 && F >= 20 && M >= 2000, "Champion",
+        R <= 60 && F >= 10, "Loyal",
+        R <= 90, "At Risk",
+        R > 90, "Lost",
+        "Other"
+    )
+
+// -----------------------------------------------------------------
+// 6. SCD Type 2 correctness check — proves you understand WHY it
+// matters: this measure shows a customer's CURRENT job title even
+// when filtering historical transactions, vs. the job title THAT
+// WAS ACTIVE AT TRANSACTION TIME (which FactTransactions already
+// links to correctly via CustomerKey). Great talking point in an
+// interview: "the fact table's CustomerKey already resolves to the
+// point-in-time-correct dimension row because of how the SCD2 grain
+// was built in the ETL."
+// -----------------------------------------------------------------
+Current Job Title (via natural key) =
+VAR SelectedCustomer = SELECTEDVALUE ( DimCustomer[cc_num] )
+RETURN
+    CALCULATE (
+        SELECTEDVALUE ( DimCustomer[Job] ),
+        FILTER ( ALL ( DimCustomer ), DimCustomer[cc_num] = SelectedCustomer && DimCustomer[IsCurrent] = TRUE () )
+    )
+
+// -----------------------------------------------------------------
+// 7. Performance measure using the pre-aggregated table
+// (see README performance section — this is what an "aggregation
+// table" pattern looks like in DAX; Power BI will auto-route to
+// AggMonthlyCustomerSummary instead of scanning FactTransactions
+// when you configure it under Manage Aggregations).
+// -----------------------------------------------------------------
+Total Amount (Agg Table) =
+SUM ( AggMonthlyCustomerSummary[TotalAmount] )
