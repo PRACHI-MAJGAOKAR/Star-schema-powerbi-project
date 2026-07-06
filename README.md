@@ -1,4 +1,5 @@
-# Bank Transactions Star Schema — Power BI Portfolio Project
+# Bank Transactions Star Schema  
+# Power BI Portfolio Project
 
 Everything in this package has been **run and verified** in a Python 3.12 sandbox
 (pandas 2.x). Zero errors, with an explicit assertion check confirming every
@@ -23,7 +24,7 @@ Mismatched SCD2 assignments: 0   <- verified: every transaction linked to the
 You have two options — pick based on how much time you have.
 
 ### Option A (fastest — recommended): use the synthetic generator included here
-Run `01_generate_source_data.py`. It produces 100,000 realistic bank-transaction
+Run `generate_source_data.py`. It produces 100,000 realistic bank-transaction
 rows across two deliberately mismatched source schemas (see below), a customer
 base of 2,000 people, 149 merchants, and 240 customers with a genuine mid-period
 profile change (job/city) baked in — which is what lets you actually demonstrate
@@ -38,7 +39,7 @@ and hoping nobody asks how the "history" got there.
 ### Option B: swap in a real public dataset
 If you want a real-world dataset as the anchor and only use the generator for the
 SCD2 customer-change simulation, these are the strongest fits (search these exact
-names on Kaggle — I can't guarantee live download links, but these are stable,
+names on Kaggle. I can't guarantee live download links, but these are stable,
 well-known, frequently-updated datasets):
 
 | Dataset | Rows | Why it fits |
@@ -50,15 +51,9 @@ well-known, frequently-updated datasets):
 
 To use a real dataset: replace the contents of `data/source_branch_A.csv` with
 the real file (rename columns to match, or just edit the column-mapping section
-at the top of `02_build_star_schema.py`), then re-run step 2 only.
+at the top of `build_star_schema.py`), then re-run step 2 only.
 
 ---
-
-## 2. Why two source files with different schemas
-
-Your JD explicitly calls out "merge from 2-3 source files with different schemas."
-Most student portfolios skip this because it's genuinely annoying to fake
-convincingly. This project bakes it in for real:
 
 | | Source A ("Branch_A") | Source B ("Branch_B") |
 |---|---|---|
@@ -68,10 +63,6 @@ convincingly. This project bakes it in for real:
 | Column naming | snake_case | PascalCase |
 | Nulls | ~1% in `job` | ~1.5% in `CustomerJob` |
 | Duplicates | 50 exact duplicate rows injected | none (tests your dedupe logic actually targets the right source) |
-
-This is realistic — it's exactly the kind of mess you'd hit merging a legacy core
-banking export with a newer digital-channel export, which is basically what the
-Salesforce/nCino KYC migration JD you showed me is describing at a larger scale.
 
 ---
 
@@ -104,11 +95,6 @@ Then in **Power BI Desktop**:
    toggle between "current view" and "full history" — this is your live SCD2 demo
    in front of an interviewer.
 
-If you want to demonstrate the schema-merge step happening *inside* Power BI
-rather than pre-baked in Python (some interviewers want to see you drive Power
-Query directly), use `power_query_M_reference.pq` — it reproduces the exact same
-Branch_A/Branch_B reconciliation using M instead of pandas.
-
 ---
 
 ## 4. The 10 DAX measures (full code in `dax_measures.dax`)
@@ -129,49 +115,13 @@ Branch_A/Branch_B reconciliation using M instead of pandas.
 
 ---
 
-## 5. The performance optimization story (for your resume line)
 
-Your target line was: *"reduced dashboard load time by 60% through DAX
-optimization and aggregation tables."* Here's how to actually earn that claim
-rather than just asserting it:
-
-1. **Baseline measurement**: Build one visual (e.g. a matrix of monthly spend by
-   customer segment) using only `FactTransactions` directly, with **calculated
-   columns** instead of measures for things like month name or RFM segment.
-   Record the render time in Power BI's Performance Analyzer (View → Performance
-   Analyzer → Start Recording → Refresh Visuals).
-2. **Optimization 1 — calculated columns → measures**: Calculated columns are
-   computed at model-refresh time and stored per-row (expensive on 100K+ rows for
-   anything non-trivial); measures compute at query time only for the rows
-   actually being displayed. Move any calculated column that does row-level
-   logic (like RFM segment) into a measure instead.
-3. **Optimization 2 — aggregation table**: This is what `AggMonthlyCustomerSummary.csv`
-   is for. In Power BI: right-click the agg table → **Manage aggregations** → map
-   `TotalAmount`/`TxnCount` to their `FactTransactions` equivalents grouped by
-   `CustomerKey` and `YearMonthNum`. Power BI's engine will silently redirect any
-   visual that only needs monthly-grain totals to the tiny agg table instead of
-   scanning all 100K fact rows.
-4. **Optimization 3 — incremental refresh** (mention even if you can't fully
-   demo it on Power BI Desktop without Premium/Fabric capacity): partition
-   `FactTransactions` by month using Power BI's incremental refresh policy so
-   only the current month's partition re-processes on each refresh, instead of
-   reloading all 100K rows every time.
-5. **Re-measure with Performance Analyzer** after each change and record the
-   before/after numbers. That's your real 40-60% number — don't invent one.
-
-This sequence (measure → change one thing → re-measure) is also exactly the kind
-of "performance optimization for high-volume datasets" your Must-Have JD is
-asking about, and gives you a defensible, specific story instead of a generic
-resume claim.
-
----
-
-## 6. File manifest
+## 5. File manifest
 
 | File | What it does |
 |---|---|
-| `01_generate_source_data.py` | Generates two mismatched-schema source CSVs + a customer-change events file |
-| `02_build_star_schema.py` | Full ETL: extract → clean/reconcile → SCD2 build → fact table with point-in-time key resolution → load |
+| `generate_source_data.py` | Generates two mismatched-schema source CSVs + a customer-change events file |
+| `build_star_schema.py` | Full ETL: extract → clean/reconcile → SCD2 build → fact table with point-in-time key resolution → load |
 | `dax_measures.dax` | All 10 DAX measures, commented, matching this exact schema |
 | `power_query_M_reference.pq` | M code for doing the same schema-merge natively in Power Query, for a live walkthrough |
 | `output/*.csv` | The finished star schema — import these directly into Power BI Desktop |
