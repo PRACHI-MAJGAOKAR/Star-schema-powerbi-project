@@ -2,7 +2,7 @@
 # Power BI Portfolio Project
 
 Everything in this package has been **run and verified** in a Python 3.12 sandbox
-(pandas 2.x). Zero errors, with an explicit assertion check confirming every
+(pandas 2.x). Zero errors, with an explicit assertion check confirmed every
 fact row resolved to a valid dimension key.
 
 ```
@@ -21,17 +21,17 @@ Mismatched SCD2 assignments: 0   <- verified: every transaction linked to the
 
 ## 1. Which dataset to actually use
 
-You have two options — pick based on how much time you have.
+You have two options :
 
-### Option A (fastest — recommended): use the synthetic generator included here
+### Option A : use the synthetic generator included here
 Run `generate_source_data.py`. It produces 100,000 realistic bank-transaction
 rows across two deliberately mismatched source schemas (see below), a customer
 base of 2,000 people, 149 merchants, and 240 customers with a genuine mid-period
-profile change (job/city) baked in — which is what lets you actually demonstrate
+profile change (job/city) baked in which is what lets you actually demonstrate
 SCD Type 2 instead of just claiming you understand it.
 
 **Why this is a legitimate portfolio choice, not "cheating":** real Kaggle exports
-almost never contain the historical attribute changes needed to demonstrate SCD2 —
+almost never contain the historical attribute changes needed to demonstrate SCD2 
 you'd have to fabricate that part yourself anyway. Using a generator you wrote and
 can explain line-by-line is more defensible in an interview than importing a CSV
 and hoping nobody asks how the "history" got there.
@@ -46,8 +46,8 @@ well-known, frequently-updated datasets):
 |---|---|---|
 | **Credit Card Transactions Fraud Detection Dataset** (by `kartik2112`) | ~1.85M | Exact schema this project's Source A mimics: cc_num, merchant, category, amt, is_fraud, customer demographics, timestamps. Best single fit for a "bank transactions" star schema. |
 | **Santander Customer Transaction Prediction** | 200K | Good if you want a pure numeric-feature story rather than descriptive fields. |
-| **Bank Marketing Dataset** (UCI/Kaggle) | 45K | Smaller, good if you want a lighter customer-attribute dimension (job, marital status, education — very SCD2-friendly attributes) but has no transaction-level fact table, so you'd pair it with a separate transactions dataset. |
-| **Lending Club Loan Data** | 2M+ | If you'd rather do a loan-portfolio star schema instead of transactions — has real "status changes over time" fields (loan_status) that map naturally to SCD2. |
+| **Bank Marketing Dataset** (UCI/Kaggle) | 45K | Smaller, good if you want a lighter customer-attribute dimension (job, marital status, education, very SCD2-friendly attributes) but has no transaction-level fact table, so you'd pair it with a separate transactions dataset. |
+| **Lending Club Loan Data** | 2M+ | If you'd rather do a loan-portfolio star schema instead of transactions and has real "status changes over time" fields (loan_status) that map naturally to SCD2. |
 
 To use a real dataset: replace the contents of `data/source_branch_A.csv` with
 the real file (rename columns to match, or just edit the column-mapping section
@@ -99,19 +99,16 @@ Then in **Power BI Desktop**:
 
 ## 4. The 10 DAX measures (full code in `dax_measures.dax`)
 
-1. `Total Amount` — base aggregation
+1. `Total Amount`
 2. `Transaction Count`
 3. `Distinct Customers`
 4. `Avg Transaction Value`
-5. `Total Amount PY` + `YoY Growth %` — time intelligence, requires marked date table
-6. `Rolling 3M Avg Amount` — `DATESINPERIOD` pattern
-7. `Fraud Rate %` — ratio measure over a boolean
-8. `Recency Days` / `Frequency Count` / `Monetary Value` / `RFM Segment` — the RFM segmentation showpiece, built with `SWITCH(TRUE(), ...)` bucketing
-9. `Current Job Title (via natural key)` — demonstrates you understand *why* SCD2
-   matters: shows how to deliberately break out of the point-in-time fact
-   relationship to answer "what is this customer's situation *today*" vs. "what
-   was true *at the time of this transaction*"
-10. `Total Amount (Agg Table)` — the aggregation-table performance pattern
+5. `Total Amount PY` + `YoY Growth %`
+6. `Rolling 3M Avg Amount` 
+7. `Fraud Rate %` 
+8. `Recency Days` / `Frequency Count` / `Monetary Value` / `RFM Segment` 
+9. `Current Job Title (via natural key)` 
+10. `Total Amount (Agg Table)` 
 
 ---
 
@@ -124,4 +121,4 @@ Then in **Power BI Desktop**:
 | `build_star_schema.py` | Full ETL: extract → clean/reconcile → SCD2 build → fact table with point-in-time key resolution → load |
 | `dax_measures.dax` | All 10 DAX measures, commented, matching this exact schema |
 | `power_query_M_reference.pq` | M code for doing the same schema-merge natively in Power Query, for a live walkthrough |
-| `output/*.csv` | The finished star schema — import these directly into Power BI Desktop |
+| `output/*.csv` | The finished star schema. import these directly into Power BI Desktop |
