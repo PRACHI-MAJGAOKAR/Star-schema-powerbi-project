@@ -19,7 +19,7 @@ Mismatched SCD2 assignments: 0   <- verified: every transaction linked to the
 
 ---
 
-## 1. Which dataset to actually use
+## 1. Dataset
 
 You have two options :
 
@@ -30,17 +30,9 @@ base of 2,000 people, 149 merchants, and 240 customers with a genuine mid-period
 profile change (job/city) baked in which is what lets you actually demonstrate
 SCD Type 2 instead of just claiming you understand it.
 
-**Why this is a legitimate portfolio choice, not "cheating":** real Kaggle exports
-almost never contain the historical attribute changes needed to demonstrate SCD2 
-you'd have to fabricate that part yourself anyway. Using a generator you wrote and
-can explain line-by-line is more defensible in an interview than importing a CSV
-and hoping nobody asks how the "history" got there.
-
 ### Option B: swap in a real public dataset
 If you want a real-world dataset as the anchor and only use the generator for the
-SCD2 customer-change simulation, these are the strongest fits (search these exact
-names on Kaggle. I can't guarantee live download links, but these are stable,
-well-known, frequently-updated datasets):
+SCD2 customer-change simulation, these are the strongest fits :
 
 | Dataset | Rows | Why it fits |
 |---|---|---|
