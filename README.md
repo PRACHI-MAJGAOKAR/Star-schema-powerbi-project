@@ -38,7 +38,7 @@ SCD2 customer-change simulation, these are the strongest fits :
 |---|---|---|
 | **Credit Card Transactions Fraud Detection Dataset** (by `kartik2112`) | ~1.85M | Exact schema this project's Source A mimics: cc_num, merchant, category, amt, is_fraud, customer demographics, timestamps. Best single fit for a "bank transactions" star schema. |
 | **Santander Customer Transaction Prediction** | 200K | Good if you want a pure numeric-feature story rather than descriptive fields. |
-| **Bank Marketing Dataset** (UCI/Kaggle) | 45K | Smaller, good if you want a lighter customer-attribute dimension (job, marital status, education, very SCD2-friendly attributes) but has no transaction-level fact table, so you'd pair it with a separate transactions dataset. |
+| **Bank Marketing Dataset** (UCI/Kaggle) | 45K | Smaller, good if you want a lighter customer-attribute dimension (job, marital status, education, very SCD2-friendly attributes) |
 | **Lending Club Loan Data** | 2M+ | If you'd rather do a loan-portfolio star schema instead of transactions and has real "status changes over time" fields (loan_status) that map naturally to SCD2. |
 
 To use a real dataset: replace the contents of `data/source_branch_A.csv` with
@@ -83,10 +83,7 @@ Then in **Power BI Desktop**:
    that table via the DAX formula bar
 5. Build report pages: KPI cards (Total Amount, Fraud Rate %, Distinct Customers),
    a line chart of Total Amount by Month with YoY Growth %, a table with RFM
-   Segment by customer, and a slicer on `DimCustomer[IsCurrent]` to show you can
-   toggle between "current view" and "full history" — this is your live SCD2 demo
-   in front of an interviewer.
-
+   Segment by customer, and a slicer on `DimCustomer[IsCurrent]`
 ---
 
 ## 4. The 10 DAX measures (full code in `dax_measures.dax`)
@@ -111,6 +108,6 @@ Then in **Power BI Desktop**:
 |---|---|
 | `generate_source_data.py` | Generates two mismatched-schema source CSVs + a customer-change events file |
 | `build_star_schema.py` | Full ETL: extract → clean/reconcile → SCD2 build → fact table with point-in-time key resolution → load |
-| `dax_measures.dax` | All 10 DAX measures, commented, matching this exact schema |
-| `power_query_M_reference.pq` | M code for doing the same schema-merge natively in Power Query, for a live walkthrough |
+| `dax_measures.dax` | All 10 DAX measures |
+| `power_query_M_reference.pq` | M code for doing the same schema-merge natively in Power Query, |
 | `output/*.csv` | The finished star schema. import these directly into Power BI Desktop |
