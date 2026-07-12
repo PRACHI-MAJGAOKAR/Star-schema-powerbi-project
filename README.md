@@ -39,7 +39,7 @@ SCD2 customer-change simulation, these are the strongest fits :
 | **Credit Card Transactions Fraud Detection Dataset** (by `kartik2112`) | ~1.85M | Exact schema this project's Source A mimics: cc_num, merchant, category, amt, is_fraud, customer demographics, timestamps. Best single fit for a "bank transactions" star schema. |
 | **Santander Customer Transaction Prediction** | 200K | Good if you want a pure numeric-feature story rather than descriptive fields. |
 | **Bank Marketing Dataset** (UCI/Kaggle) | 45K | Smaller, good if you want a lighter customer-attribute dimension (job, marital status, education, very SCD2-friendly attributes) |
-| **Lending Club Loan Data** | 2M+ | If you'd rather do a loan-portfolio star schema instead of transactions and has real "status changes over time" fields (loan_status) that map naturally to SCD2. |
+| **Lending Club Loan Data** | 2M+ | A loan-portfolio star schema that has real "status changes over time" fields (loan_status) that map naturally to SCD2. |
 
 To use a real dataset: replace the contents of `data/source_branch_A.csv` with
 the real file (rename columns to match, or just edit the column-mapping section
