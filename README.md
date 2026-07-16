@@ -1,5 +1,5 @@
 # Bank Transactions Star Schema  
-# Power BI Portfolio Project
+
 
 Everything in this package has been **run and verified** in a Python 3.12 sandbox
 (pandas 2.x). Zero errors, with an explicit assertion check confirmed every
